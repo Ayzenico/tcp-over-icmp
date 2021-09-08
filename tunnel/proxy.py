@@ -23,13 +23,18 @@ class Proxy:
         raise NotImplementedError
 
     def run(self):
-        while True:
-            sread, _, _ = select.select(self.sockets, [], [])
-            for sock in sread:
-                if sock.proto == socket.IPPROTO_ICMP:
-                    self.icmp_data_handler(sock)
-                else:
-                    self.tcp_data_handler(sock)
+        try:
+            while True:
+                sread, _, _ = select.select(self.sockets, [], [])
+                for sock in sread:
+                    if sock.proto == socket.IPPROTO_ICMP:
+                        self.icmp_data_handler(sock)
+                    else:
+                        self.tcp_data_handler(sock)
+        except:
+            raise
+        finally:
+            self.exit()
 
     def exit(self):
         for socket in self.sockets:
