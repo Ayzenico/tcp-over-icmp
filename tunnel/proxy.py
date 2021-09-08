@@ -29,15 +29,16 @@ class Proxy:
                 sread, _, _ = select.select(self.sockets, [], [])
                 for sock in sread:
                     if sock.proto == socket.IPPROTO_ICMP:
+                        print("Received icmp.")
                         self.icmp_data_handler(sock)
                     else:
+                        print("Received tcp.")
                         self.tcp_data_handler(sock)
         except:
             raise
         finally:
-            self.exit()
+            self.close()
 
-    def exit(self):
+    def close(self):
         for socket in self.sockets:
             socket.close()
-        exit()

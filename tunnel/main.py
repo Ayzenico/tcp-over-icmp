@@ -36,8 +36,10 @@ def main():
     args = parser.parse_args()
 
     if args.server:
+        print("Started server.")
         tunnel = ProxyServer()
     else:
+        print("Started client proxy.")
         tunnel = ProxyClientManager(
             proxy_server_hostname=args.proxy_host,
             local_hostname=args.local_host, local_port=args.local_port,

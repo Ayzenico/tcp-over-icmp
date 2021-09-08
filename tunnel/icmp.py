@@ -8,9 +8,10 @@ from dataclasses import dataclass
 
 BARKER = 0xdfdfdf00
 BARKER_SIZE = 4
-IP_PACK_STR = "BBHHHBBH4s4s"
-IP_HEADER_SIZE = 20
+IP_PACK_STR = "!BBHHHBBH4s4s"
+IP_HEADER_SIZE = struct.calcsize(IP_PACK_STR)
 ICMP_PACK_STR = "!BBHHHI4sH"
+ICMP_HEADER_SIZE = struct.calcsize(ICMP_PACK_STR)
 
 ICMP_ECHO_REQUEST = 8
 ICMP_ECHO_REPLY = 0
@@ -29,11 +30,12 @@ class IPHeader:
     src_ip: str = ''
     dst_ip: str = ''
 
-    def __init__(self, packet: bytes):
-        self.version, self.type, self.len,
+    def parse(self, packet: bytes):
+        (self.version, self.type, self.len,
         self.host_id, self.flags, self.ttl,
         self.protocol, self.checksum, self.src_ip,
-        self.dst_ip = struct.unpack(IP_PACK_STR, packet[:IP_HEADER_SIZE])
+        self.dst_ip) = struct.unpack(IP_PACK_STR, packet[:IP_HEADER_SIZE])
+        return self
 
     def make_header(self) -> bytes:  # TODO unused probably can delete later
         return struct.pack(IP_PACK_STR, self.version, self.type, self.len,
@@ -59,13 +61,16 @@ class ICMPMessage:
     dest_port: int = 0
     data: bytes = b''
 
-    def __init__(self, packet: bytes):
-        self.ip_header = IPHeader(packet)
+    def parse(self, packet: bytes):
+        self.ip_header = IPHeader().parse(packet)
+        
 
-        self.type, self.code, self.checksum,
+        (self.type, self.code, self.checksum,
         self.id, self.sequence, self.barker,
-        self.dest_ip, self.dest_port, self.data = struct.unpack(
-            ICMP_PACK_STR, packet[IP_HEADER_SIZE:])
+        self.dest_ip, self.dest_port) = struct.unpack(
+            ICMP_PACK_STR, packet[IP_HEADER_SIZE:IP_HEADER_SIZE + ICMP_HEADER_SIZE])
+        self.data = packet[IP_HEADER_SIZE + ICMP_HEADER_SIZE:]
+        return self
 
     def __init__(self, type=ICMP_ECHO_REQUEST, code=0, checksum=None, id=0, sequence=0, barker=None, dest_ip='', dest_port=0, data=b''):
         self.type = type
@@ -74,8 +79,8 @@ class ICMPMessage:
         self.id = id
         self.sequence = sequence
         self.barker = barker
-        self.dest_ip = dest_ip
-        self.dest_port = dest_port
+        self.dest_ip = dest_ip.encode('ascii')
+        self.dest_port = int(dest_port)
         self.data = data
 
     def make_message(self, make_ip=False) -> bytes:
@@ -90,19 +95,20 @@ class ICMPMessage:
         return ip_header + icmp_header + self.data
 
     def calculate_checksum(self):
+        self.checksum = 0
         packet = self.make_message()
         csum = 0
-        countTo = (len(packet) / 2) * 2
+        countTo = len(packet) if len(packet) % 2 == 0 else (len(packet) - 1)
         count = 0
 
         while count < countTo:
-            thisVal = ord(packet[count+1]) * 256 + ord(packet[count])
+            thisVal = (packet[count+1]) * 256 + (packet[count])
             csum = csum + thisVal
             csum = csum & 0xffffffff
             count = count + 2
 
         if countTo < len(packet):
-            csum = csum + ord(packet[len(packet) - 1])
+            csum = csum + (packet[len(packet) - 1])
             csum = csum & 0xffffffff
 
         csum = (csum >> 16) + (csum & 0xffff)
@@ -120,17 +126,18 @@ class ICMPSocket(socket.socket):
 
         self.sock = super().__init__(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
         # So that each ICMPSocket instance will have a different BARKER
-        self._barker = binascii.unhexlify(hex(BARKER + self.fileno())[2:])
+        self._barker = BARKER + self.fileno()
 
     @property
     def barker(self):
         return self._barker
 
-    def recvfrom(self, size: int, flags: int) -> Tuple[bytes, Any]:
+    def recvfrom(self, size: int, flags: int = ...) -> Tuple[bytes, Any]:
         data, address = super().recvfrom(size)
-        message = ICMPMessage(data)
+        message = ICMPMessage().parse(data)
+        print(message.barker, self._barker)
         if message.barker != self._barker:
-            return None  # Not our message
+            return None, address# Not our message
 
         return message, address
 
@@ -142,4 +149,4 @@ class ICMPSocket(socket.socket):
             message.calculate_checksum()
 
         data = message.make_message()
-        data, address = super().sendto(data, address)
+        _ = super().sendto(data, address)

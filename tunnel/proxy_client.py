@@ -18,9 +18,13 @@ class ProxyClient(Proxy, threading.Thread):
         self.sockets = [self.tcp_socket, self.icmp_socket]
 
     def icmp_data_handler(self, sock):
-        message = sock.recvfrom(ICMP_BUFFER_SIZE)
+        message, address = sock.recvfrom(ICMP_BUFFER_SIZE)
+        if not message:
+            return
         if message.type == ICMP_ECHO_REPLY:
             self.tcp_socket.send(message.data)
+
+        print("Received response")
 
     def tcp_data_handler(self, sock):
         sdata = sock.recv(TCP_BUFFER_SIZE)
@@ -30,8 +34,10 @@ class ProxyClient(Proxy, threading.Thread):
         message = ICMPMessage(type=ICMP_ECHO_REQUEST, code=code,
                               dest_ip=self.dest[0], dest_port=self.dest[1], data=sdata)
         self.icmp_socket.sendto(message, (self.proxy, 1))
+        print("sent icmp request")
         if code == 1:
-            self.exit()
+            self.close()
+            exit()
 
 
 class ProxyClientManager(ProxyClient):
@@ -46,8 +52,10 @@ class ProxyClientManager(ProxyClient):
 
     def run(self):
         while True:
+            print("Listening for clients")
             self._tcp_server_socket.listen(5)
             sock, addr = self._tcp_server_socket.accept()
+            print("Accepted client")
             newthread = ProxyClient(
                 self._proxy_hostname, sock, self._dest_address)
             newthread.start()
