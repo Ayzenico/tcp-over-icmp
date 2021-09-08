@@ -39,7 +39,7 @@ def main():
         tunnel = ProxyServer()
     else:
         tunnel = ProxyClientManager(
-            proxy_hostname=args.proxy_host,
+            proxy_server_hostname=args.proxy_host,
             local_hostname=args.local_host, local_port=args.local_port,
             dest_hostname=args.destination_host, dest_port=args.destination_port
         )

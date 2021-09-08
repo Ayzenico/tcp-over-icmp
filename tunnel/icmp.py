@@ -3,7 +3,7 @@
 import socket
 import struct
 import binascii
-from typing import Optional, Any
+from typing import Optional, Any, Tuple
 from dataclasses import dataclass
 
 BARKER = 0xdfdfdf00
@@ -108,13 +108,13 @@ class ICMPSocket(socket.socket):
         
         self.sock = super().__init__(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
         # So that each ICMPSocket instance will have a different BARKER
-        self._barker = binascii.unhexlify(hex(BARKER + self._sock.fileno)[2:])
+        self._barker = binascii.unhexlify(hex(BARKER + self.fileno())[2:])
 
     @property
     def barker(self):
         return self._barker
 
-    def recvfrom(self, size: int, flags: int) -> tuple[bytes, Any]:
+    def recvfrom(self, size: int, flags: int) -> Tuple[bytes, Any]:
         data, address = super().recvfrom(size)
         message = ICMPMessage(data)
         if message.barker != self._barker:
@@ -122,7 +122,7 @@ class ICMPSocket(socket.socket):
 
         return message, address
 
-    def sendto(self, message: ICMPMessage, address: tuple[bytes, Any]) -> int:
+    def sendto(self, message: ICMPMessage, address: Tuple[bytes, Any]) -> int:
         if not message.barker:
             message.barker = self.barker
 
