@@ -20,14 +20,14 @@ ICMP_ECHO_REPLY = 0
 class IPHeader:
     version: int = 0x45
     type: int = 0
-    len: int
+    len: int = 0
     host_id: int = 0
     flags: int = 0
     ttl: int = 128
     protocol: int = 1  # ICMP
-    checksum: int
-    src_ip: str
-    dst_ip: str
+    checksum: int = 0
+    src_ip: str = ''
+    dst_ip: str = ''
 
     def __init__(self, packet: bytes):
         self.version, self.type, self.len, 
@@ -47,17 +47,17 @@ class ICMPMessage:
     ip_header: IPHeader
 
     # Optional fields will be filled when using ICMPSocket.sendto unless specified otherwise
-    type: int
+    type: int = ICMP_ECHO_REQUEST
     code: int = 0
-    checksum: Optional(int) = None
+    checksum: Optional[int] = None
     id: int = 0
     sequence: int = 0
 
     # data
-    barker: Optional(int) = None
-    dest_ip: str
-    dest_port: int
-    data: bytes 
+    barker: Optional[int] = None
+    dest_ip: str = ''
+    dest_port: int = 0
+    data: bytes = b''
 
     def __init__(self, packet: bytes):
         self.ip_header = IPHeader(packet)

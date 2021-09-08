@@ -9,10 +9,10 @@ from icmp import ICMPSocket, ICMP_ECHO_REPLY, ICMPMessage, ICMP_ECHO_REQUEST
 
 
 class ProxyClient(Proxy, threading.Thread):
-    def __init__(self, proxy_hostname: str, sock: socket.socket, dest: Tuple(str, int)):
+    def __init__(self, proxy_hostname: str, sock: socket.socket, dest: Tuple[str, int]):
         threading.Thread.__init__(self)
         self.proxy : str = proxy_hostname
-        self.dest : Tuple(str, int) = dest
+        self.dest : Tuple[str, int] = dest
         self.tcp_socket : socket.socket = sock
         self.icmp_socket : ICMPSocket = ICMPSocket()
         self.sockets = [self.tcp_socket, self.icmp_socket]
