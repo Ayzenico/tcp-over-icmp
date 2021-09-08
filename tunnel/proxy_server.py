@@ -12,7 +12,7 @@ class ProxyServer(Proxy):
         self.sockets = [self.icmp_socket]
 
     def icmp_data_handler(self, sock):
-        message, addr = self.icmp_socket.recvfrom(ICMP_BUFFER_SIZE)
+        message, addr = sock.recvfrom(ICMP_BUFFER_SIZE)
         self.source = addr[0]
         self.dest = (message.dest_ip, message.dest_port)
         if message.type == ICMP_ECHO_REPLY and message.code == 0:

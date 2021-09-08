@@ -24,7 +24,7 @@ def main():
     parser.add_argument("-p", "--proxy_host",
                         help="Host on which the proxy is running")
     parser.add_argument("-lh", "--local_host", default="127.0.0.1",
-                        help="(local) Listen ip for incomming TCP connections,"\
+                        help="(local) Listen ip for incomming TCP connections,"
                         "default 127.0.0.1")
     parser.add_argument("-lp", "--local_port", type=int,
                         help="(local) Listen port for incomming TCP connections")

@@ -30,16 +30,16 @@ class IPHeader:
     dst_ip: str = ''
 
     def __init__(self, packet: bytes):
-        self.version, self.type, self.len, 
-        self.host_id, self.flags, self.ttl, 
-        self.protocol, self.checksum, self.src_ip, 
+        self.version, self.type, self.len,
+        self.host_id, self.flags, self.ttl,
+        self.protocol, self.checksum, self.src_ip,
         self.dst_ip = struct.unpack(IP_PACK_STR, packet[:IP_HEADER_SIZE])
 
     def make_header(self) -> bytes:  # TODO unused probably can delete later
         return struct.pack(IP_PACK_STR, self.version, self.type, self.len,
-        self.host_id, self.flags, self.ttl, 
-        self.protocol, self.checksum, self.src_ip, self.dst_ip
-        )
+                           self.host_id, self.flags, self.ttl,
+                           self.protocol, self.checksum, self.src_ip, self.dst_ip
+                           )
 
 
 @dataclass
@@ -64,7 +64,19 @@ class ICMPMessage:
 
         self.type, self.code, self.checksum,
         self.id, self.sequence, self.barker,
-        self.dest_ip, self.dest_port, self.data = struct.unpack(ICMP_PACK_STR, packet[IP_HEADER_SIZE:])
+        self.dest_ip, self.dest_port, self.data = struct.unpack(
+            ICMP_PACK_STR, packet[IP_HEADER_SIZE:])
+
+    def __init__(self, type=ICMP_ECHO_REQUEST, code=0, checksum=None, id=0, sequence=0, barker=None, dest_ip='', dest_port=0, data=b''):
+        self.type = type
+        self.code = code
+        self.checksum = checksum
+        self.id = id
+        self.sequence = sequence
+        self.barker = barker
+        self.dest_ip = dest_ip
+        self.dest_port = dest_port
+        self.data = data
 
     def make_message(self, make_ip=False) -> bytes:
         ip_header = b''
@@ -72,9 +84,9 @@ class ICMPMessage:
             ip_header = self.ip_header.make_header()
 
         icmp_header = struct.pack(ICMP_PACK_STR, self.type,
-                        self.code, self.checksum,
-                        self.id, self.sequence, 
-                        self.barker, self.dest_ip, self.dest_port)
+                                  self.code, self.checksum,
+                                  self.id, self.sequence,
+                                  self.barker, self.dest_ip, self.dest_port)
         return ip_header + icmp_header + self.data
 
     def calculate_checksum(self):
@@ -105,7 +117,7 @@ class ICMPSocket(socket.socket):
 
     def __init__(self):
         """Initialize the ICMP socket and set to only receive icmp messages which starts with barker."""
-        
+
         self.sock = super().__init__(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
         # So that each ICMPSocket instance will have a different BARKER
         self._barker = binascii.unhexlify(hex(BARKER + self.fileno())[2:])

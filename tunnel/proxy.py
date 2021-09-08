@@ -8,6 +8,7 @@ import select
 ICMP_BUFFER_SIZE = 1500
 TCP_BUFFER_SIZE = 1500
 
+
 class Proxy:
     @staticmethod
     def create_tcp_socket(dest, server=False):
