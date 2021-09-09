@@ -148,5 +148,4 @@ class ICMPSocket(socket.socket):
             message.calculate_checksum()
 
         data = message.make_message()
-        print(data, address)
         _ = super().sendto(data, address)

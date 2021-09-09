@@ -30,16 +30,13 @@ class ProxyServer(Proxy):
                 self.sockets.remove(self.tcp_sockets[message.barker])
                 self.tcp_sockets[message.barker].close()
                 del self.tcp_sockets[message.barker]
-            else:
-                print("Error: received end connection but socket doesn't exist.")
         elif message.type == ICMP_ECHO_REQUEST and message.code == 0:
             # Handle client request
-            if message.barker in self.tcp_sockets:
-                self.tcp_sockets[message.barker].send(message.data)
-            else:
+            if message.barker not in self.tcp_sockets:
                 # New connection
                 self.tcp_sockets[message.barker] = self.create_tcp_socket(self.dest)
                 self.sockets.append(self.tcp_sockets[message.barker])
+            self.tcp_sockets[message.barker].send(message.data)
         else:
             # Unknown ICMP format
             print("Received bad ICMP packet")
@@ -53,8 +50,12 @@ class ProxyServer(Proxy):
             if sock in self.sockets:
                 self.remove_tcp_socket(sock)
 
+        for _barker, _socket in self.tcp_sockets.items():
+            if _socket == sock:
+                sock_barker = _barker
+
         code = 0 if len(sdata) > 0 else 1
-        message = ICMPMessage(type=ICMP_ECHO_REPLY, code=code, dest_ip=self.dest[0], dest_port=self.dest[1], data=sdata)
+        message = ICMPMessage(type=ICMP_ECHO_REPLY, code=code, dest_ip=self.dest[0], dest_port=self.dest[1], data=sdata, barker=sock_barker)
         self.icmp_socket.sendto(message, (self.source, 0))
 
         if code == 1:
