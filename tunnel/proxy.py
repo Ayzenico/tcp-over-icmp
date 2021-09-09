@@ -25,7 +25,8 @@ class Proxy:
         raise NotImplementedError
 
     def run(self):
-        """Run infinitly the proxy server. Will not return."""
+        """Run the proxy server. Will not return."""
+
         try:
             while True:
                 sread, _, _ = select.select(self.sockets, [], [])

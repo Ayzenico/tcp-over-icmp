@@ -7,16 +7,10 @@ from proxy_client import ProxyClientManager
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="pptunnel, python ping tunnel, send your tcp traffic over icmp",
-        usage="""Needs to be runned as root (use of raw sockets)
-                Client side: pptunnel -p <proxy_host> -lp <proxy_port> -dh <dest_host> -dp <dest_port>
-                Proxy side: pptunnel -s""",
-        epilog="""
-                Example:
-                We want to connect in ftp to google.com:21 via our server proxy.server.com
-                Client : sudo python pptunnel -p proxy.server.com -lp 8000 -dh google.com -dp 21
-                Proxy  : sudo python pptunnel -s 
-                Client : ftp localhost 8000"""
+        description="Python TCP over ICMP tunnel.",
+        usage="""Needs to be runned as root (use of raw sockets), currently support only IP addresses.
+                Client side: pptunnel -p <proxy_host> -lh <local_host> -lp <local_port> -dh <dest_host> -dp <dest_port>
+                Server side: pptunnel -s""",
     )
 
     parser.add_argument("-s", "--server", action="store_true", default=False,

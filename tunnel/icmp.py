@@ -2,11 +2,15 @@
 
 import socket
 import struct
+import random
 from typing import Optional, Any, Tuple
 from dataclasses import dataclass
 
-BARKER = 0xdfdfdf00
+# For each socket there is a different barker which is (BARKER + socket.fileno())
+# I used random so that multiple clients with different FD tables will be able to use the same server.
+BARKER = random.randrange(0, 0xffffff00)
 BARKER_SIZE = 4
+
 IP_PACK_STR = "!BBHHHBBH4s4s"
 IP_HEADER_SIZE = struct.calcsize(IP_PACK_STR)
 ICMP_PACK_STR = "!BBHHHI4sH"
