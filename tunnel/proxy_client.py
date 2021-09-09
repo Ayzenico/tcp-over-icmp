@@ -59,7 +59,7 @@ class ProxyClientManager(ProxyClient):
     def run(self):
         while True:
             self._tcp_server_socket.listen(5)
-            sock, _= self._tcp_server_socket.accept()
+            sock, _ = self._tcp_server_socket.accept()
             newthread = ProxyClient(
                 self._proxy_hostname, sock, self._dest_address)
             newthread.start()

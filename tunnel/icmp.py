@@ -6,7 +6,8 @@ import random
 from typing import Optional, Any, Tuple
 from dataclasses import dataclass
 
-# For each socket there is a different barker which is (BARKER + socket.fileno())
+# For each ICMP socket there is a different barker which is (BARKER + socket.fileno()).
+# The barker is used as an identifier for the TCP connection.
 # I used random so that multiple clients with different FD tables will be able to use the same server.
 BARKER = random.randrange(0, 0xffffff00)
 BARKER_SIZE = 4
@@ -35,9 +36,9 @@ class IPHeader:
 
     def parse(self, packet: bytes):
         (self.version, self.type, self.len,
-        self.host_id, self.flags, self.ttl,
-        self.protocol, self.checksum, self.src_ip,
-        self.dst_ip) = struct.unpack(IP_PACK_STR, packet[:IP_HEADER_SIZE])
+         self.host_id, self.flags, self.ttl,
+         self.protocol, self.checksum, self.src_ip,
+         self.dst_ip) = struct.unpack(IP_PACK_STR, packet[:IP_HEADER_SIZE])
         return self
 
 
@@ -60,18 +61,6 @@ class ICMPMessage:
     dest_port: int = 0
     data: bytes = b''
 
-    def parse(self, packet: bytes):
-        self.ip_header = IPHeader().parse(packet)
-        
-        (self.type, self.code, self.checksum,
-        self.id, self.sequence, self.barker,
-        self.dest_ip, self.dest_port) = struct.unpack(
-            ICMP_PACK_STR, packet[IP_HEADER_SIZE:IP_HEADER_SIZE + ICMP_HEADER_SIZE])
-
-        self.data = packet[IP_HEADER_SIZE + ICMP_HEADER_SIZE:]
-        self.dest_ip = socket.inet_ntoa(self.dest_ip)
-        return self
-
     def __init__(self, type=ICMP_ECHO_REQUEST, code=0, checksum=None, id=0, sequence=0, barker=None, dest_ip='', dest_port=0, data=b''):
         self.type = type
         self.code = code
@@ -82,6 +71,18 @@ class ICMPMessage:
         self.dest_ip = dest_ip
         self.dest_port = int(dest_port)
         self.data = data
+
+    def parse(self, packet: bytes):
+        self.ip_header = IPHeader().parse(packet)
+
+        (self.type, self.code, self.checksum,
+         self.id, self.sequence, self.barker,
+         self.dest_ip, self.dest_port) = struct.unpack(
+            ICMP_PACK_STR, packet[IP_HEADER_SIZE:IP_HEADER_SIZE + ICMP_HEADER_SIZE])
+
+        self.data = packet[IP_HEADER_SIZE + ICMP_HEADER_SIZE:]
+        self.dest_ip = socket.inet_ntoa(self.dest_ip)
+        return self
 
     def make_message(self, make_ip=False) -> bytes:
         ip_header = b''
@@ -152,4 +153,4 @@ class ICMPSocket(socket.socket):
             message.calculate_checksum()
 
         data = message.make_message()
-        _ = super().sendto(data, address)
+        super().sendto(data, address)

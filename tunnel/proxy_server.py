@@ -58,7 +58,8 @@ class ProxyServer(Proxy):
 
         # if no data the socket may be closed/timeout/EOF
         code = 0 if len(sdata) > 0 else 1
-        message = ICMPMessage(type=ICMP_ECHO_REPLY, code=code, dest_ip=dest[0], dest_port=dest[1], data=sdata, barker=sock_barker)
+        message = ICMPMessage(type=ICMP_ECHO_REPLY, code=code,
+                              dest_ip=dest[0], dest_port=dest[1], data=sdata, barker=sock_barker)
         self.icmp_socket.sendto(message, (source_hostname, 0))
 
         if code == 1:
@@ -66,7 +67,7 @@ class ProxyServer(Proxy):
 
     def remove_tcp_socket(self, sock):
         self.sockets.remove(sock)
-        for k,v in self.tcp_sockets.items():
+        for k, v in self.tcp_sockets.items():
             if v == sock:
                 del self.tcp_sockets[k]
                 return

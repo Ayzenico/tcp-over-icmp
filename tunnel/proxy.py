@@ -18,10 +18,12 @@ class Proxy:
 
     def icmp_data_handler(self, sock):
         """Handle ICMP packet."""
+
         raise NotImplementedError
 
     def tcp_data_handler(self, sock):
         """Handle TCP packet."""
+
         raise NotImplementedError
 
     def run(self):
