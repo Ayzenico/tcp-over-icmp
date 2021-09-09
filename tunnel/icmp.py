@@ -2,7 +2,6 @@
 
 import socket
 import struct
-import binascii
 from typing import Optional, Any, Tuple
 from dataclasses import dataclass
 
@@ -64,12 +63,12 @@ class ICMPMessage:
     def parse(self, packet: bytes):
         self.ip_header = IPHeader().parse(packet)
         
-
         (self.type, self.code, self.checksum,
         self.id, self.sequence, self.barker,
         self.dest_ip, self.dest_port) = struct.unpack(
             ICMP_PACK_STR, packet[IP_HEADER_SIZE:IP_HEADER_SIZE + ICMP_HEADER_SIZE])
         self.data = packet[IP_HEADER_SIZE + ICMP_HEADER_SIZE:]
+        self.dest_ip = socket.inet_ntoa(self.dest_ip)
         return self
 
     def __init__(self, type=ICMP_ECHO_REQUEST, code=0, checksum=None, id=0, sequence=0, barker=None, dest_ip='', dest_port=0, data=b''):
@@ -79,7 +78,8 @@ class ICMPMessage:
         self.id = id
         self.sequence = sequence
         self.barker = barker
-        self.dest_ip = dest_ip.encode('ascii')
+        #self.dest_ip = dest_ip.encode('ascii')
+        self.dest_ip = dest_ip
         self.dest_port = int(dest_port)
         self.data = data
 
@@ -91,7 +91,7 @@ class ICMPMessage:
         icmp_header = struct.pack(ICMP_PACK_STR, self.type,
                                   self.code, self.checksum,
                                   self.id, self.sequence,
-                                  self.barker, self.dest_ip, self.dest_port)
+                                  self.barker, socket.inet_aton(self.dest_ip), self.dest_port)
         return ip_header + icmp_header + self.data
 
     def calculate_checksum(self):
@@ -136,8 +136,8 @@ class ICMPSocket(socket.socket):
         data, address = super().recvfrom(size)
         message = ICMPMessage().parse(data)
         print(message.barker, self._barker)
-        if message.barker != self._barker:
-            return None, address# Not our message
+        #if message.barker != self._barker:
+            #return None, address# Not our message
 
         return message, address
 
