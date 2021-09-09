@@ -36,15 +36,11 @@ class IPHeader:
         self.dst_ip) = struct.unpack(IP_PACK_STR, packet[:IP_HEADER_SIZE])
         return self
 
-    def make_header(self) -> bytes:  # TODO unused probably can delete later
-        return struct.pack(IP_PACK_STR, self.version, self.type, self.len,
-                           self.host_id, self.flags, self.ttl,
-                           self.protocol, self.checksum, self.src_ip, self.dst_ip
-                           )
-
 
 @dataclass
 class ICMPMessage:
+    """ICMP message object with our protocol as payload."""
+
     ip_header: IPHeader
 
     # Optional fields will be filled when using ICMPSocket.sendto unless specified otherwise
@@ -54,9 +50,9 @@ class ICMPMessage:
     id: int = 0
     sequence: int = 0
 
-    # data
+    # Payload
     barker: Optional[int] = None
-    dest_ip: str = ''
+    dest_ip: str = ''  # As ascii
     dest_port: int = 0
     data: bytes = b''
 
@@ -67,6 +63,7 @@ class ICMPMessage:
         self.id, self.sequence, self.barker,
         self.dest_ip, self.dest_port) = struct.unpack(
             ICMP_PACK_STR, packet[IP_HEADER_SIZE:IP_HEADER_SIZE + ICMP_HEADER_SIZE])
+
         self.data = packet[IP_HEADER_SIZE + ICMP_HEADER_SIZE:]
         self.dest_ip = socket.inet_ntoa(self.dest_ip)
         return self
@@ -78,7 +75,6 @@ class ICMPMessage:
         self.id = id
         self.sequence = sequence
         self.barker = barker
-        #self.dest_ip = dest_ip.encode('ascii')
         self.dest_ip = dest_ip
         self.dest_port = int(dest_port)
         self.data = data
@@ -95,6 +91,11 @@ class ICMPMessage:
         return ip_header + icmp_header + self.data
 
     def calculate_checksum(self):
+        """
+        Calculate and fill the checksum field of ICMP.
+        Calculations taken from https://gist.github.com/pklaus/856268 with a few changes.
+        """
+
         self.checksum = 0
         packet = self.make_message()
         csum = 0
@@ -102,13 +103,13 @@ class ICMPMessage:
         count = 0
 
         while count < countTo:
-            thisVal = (packet[count+1]) * 256 + (packet[count])
+            thisVal = packet[count+1] * 256 + packet[count]
             csum = csum + thisVal
             csum = csum & 0xffffffff
             count = count + 2
 
         if countTo < len(packet):
-            csum = csum + (packet[len(packet) - 1])
+            csum = csum + packet[len(packet) - 1]
             csum = csum & 0xffffffff
 
         csum = (csum >> 16) + (csum & 0xffff)
@@ -120,6 +121,7 @@ class ICMPMessage:
 
 
 class ICMPSocket(socket.socket):
+    """Proprietary ICMP socket for the proxy."""
 
     def __init__(self):
         """Initialize the ICMP socket and set to only receive icmp messages which starts with barker."""
@@ -149,4 +151,5 @@ class ICMPSocket(socket.socket):
             message.calculate_checksum()
 
         data = message.make_message()
+        print(data, address)
         _ = super().sendto(data, address)

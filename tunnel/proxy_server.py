@@ -5,6 +5,8 @@ from icmp import ICMPSocket, ICMP_ECHO_REPLY, ICMPMessage, ICMP_ECHO_REQUEST
 
 
 class ProxyServer(Proxy):
+    """The proxy server which will handle TCP connections."""
+
     def __init__(self):
         self.tcp_socket = None
         self.source, self.dest = None, None
@@ -12,6 +14,8 @@ class ProxyServer(Proxy):
         self.sockets = [self.icmp_socket]
 
     def icmp_data_handler(self, sock):
+        """See base class."""
+
         message, addr = sock.recvfrom(ICMP_BUFFER_SIZE)
         if not message:
             return
@@ -21,20 +25,25 @@ class ProxyServer(Proxy):
             # our packet, do nothing
             pass
         elif message.type == ICMP_ECHO_REQUEST and message.code == 1:
-            # control
+            # End connection
             if self.tcp_socket in self.sockets:
                 self.sockets.remove(self.tcp_socket)
                 self.tcp_socket.close()
                 self.tcp_socket = None
         elif message.type == ICMP_ECHO_REQUEST and message.code == 0:
+            # Handle client request
             if not self.tcp_socket:
+                # New connection
                 self.tcp_socket = self.create_tcp_socket(self.dest)
                 self.sockets.append(self.tcp_socket)
             self.tcp_socket.send(message.data)
         else:
+            # Unknown ICMP format
             print("Received bad ICMP packet")
 
     def tcp_data_handler(self, sock):
+        """See base class."""
+
         try:
             sdata = sock.recv(TCP_BUFFER_SIZE)
         except OSError:

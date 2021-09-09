@@ -2,13 +2,15 @@
 
 import threading
 import socket
-from typing import List, Tuple
+from typing import Tuple
 
 from proxy import Proxy, ICMP_BUFFER_SIZE, TCP_BUFFER_SIZE
 from icmp import ICMPSocket, ICMP_ECHO_REPLY, ICMPMessage, ICMP_ECHO_REQUEST
 
 
 class ProxyClient(Proxy, threading.Thread):
+    """Proxy client on the blocked TCP side."""
+
     def __init__(self, proxy_hostname: str, sock: socket.socket, dest: Tuple[str, int]):
         threading.Thread.__init__(self)
         self.proxy: str = proxy_hostname
@@ -18,13 +20,17 @@ class ProxyClient(Proxy, threading.Thread):
         self.sockets = [self.tcp_socket, self.icmp_socket]
 
     def icmp_data_handler(self, sock):
-        message, address = sock.recvfrom(ICMP_BUFFER_SIZE)
+        """See base class."""
+
+        message, _ = sock.recvfrom(ICMP_BUFFER_SIZE)
         if not message:
             return
         if message.type == ICMP_ECHO_REPLY:
             self.tcp_socket.send(message.data)
 
     def tcp_data_handler(self, sock):
+        """See base class."""
+
         sdata = sock.recv(TCP_BUFFER_SIZE)
         # if no data the socket may be closed/timeout/EOF
         len_sdata = len(sdata)
@@ -38,6 +44,8 @@ class ProxyClient(Proxy, threading.Thread):
 
 
 class ProxyClientManager(ProxyClient):
+    """Manager of all ProxyClient instances."""
+
     def __init__(self, proxy_server_hostname: str, local_hostname: str, local_port: int, dest_hostname: str, dest_port: int):
         self._proxy_hostname = proxy_server_hostname
         self._local_address = (local_hostname, local_port)
@@ -45,12 +53,10 @@ class ProxyClientManager(ProxyClient):
         self._tcp_server_socket = self.create_tcp_socket(
             self._local_address, server=True)
 
-    # TODO properties
-
     def run(self):
         while True:
             self._tcp_server_socket.listen(5)
-            sock, addr = self._tcp_server_socket.accept()
+            sock, _= self._tcp_server_socket.accept()
             newthread = ProxyClient(
                 self._proxy_hostname, sock, self._dest_address)
             newthread.start()

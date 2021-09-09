@@ -1,4 +1,4 @@
-"""Implements base class for the proxy."""
+"""Implements base class for the proxy client and server."""
 
 import socket
 import select
@@ -18,12 +18,15 @@ class Proxy:
         return sock
 
     def icmp_data_handler(self, sock):
+        """Handle ICMP packet."""
         raise NotImplementedError
 
     def tcp_data_handler(self, sock):
+        """Handle TCP packet."""
         raise NotImplementedError
 
     def run(self):
+        """Run infinitly the proxy server. Will not return."""
         try:
             while True:
                 sread, _, _ = select.select(self.sockets, [], [])
