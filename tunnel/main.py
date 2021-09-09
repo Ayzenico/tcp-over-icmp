@@ -9,8 +9,8 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Python TCP over ICMP tunnel.",
         usage="""Needs to be runned as root (use of raw sockets), currently support only IP addresses.
-                Client side: pptunnel -p <proxy_host> -lh <local_host> -lp <local_port> -dh <dest_host> -dp <dest_port>
-                Server side: pptunnel -s""",
+                Client side: python3 main.py -p <proxy_host> -lh <local_host> -lp <local_port> -dh <dest_host> -dp <dest_port>
+                Server side: python3 main.py -s""",
     )
 
     parser.add_argument("-s", "--server", action="store_true", default=False,
