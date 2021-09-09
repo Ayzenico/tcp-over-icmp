@@ -25,16 +25,19 @@ class ProxyClient(Proxy, threading.Thread):
         message, _ = sock.recvfrom(ICMP_BUFFER_SIZE)
         if not message:
             return
-        if message.type == ICMP_ECHO_REPLY:
-            self.tcp_socket.send(message.data)
+        if message.barker == self.icmp_socket.barker:
+            if message.type == ICMP_ECHO_REPLY and message.code == 1:
+                self.close()
+                exit()
+            elif message.type == ICMP_ECHO_REPLY:
+                self.tcp_socket.send(message.data)
 
     def tcp_data_handler(self, sock):
         """See base class."""
 
         sdata = sock.recv(TCP_BUFFER_SIZE)
         # if no data the socket may be closed/timeout/EOF
-        len_sdata = len(sdata)
-        code = 0 if len_sdata > 0 else 1
+        code = 0 if len(sdata) > 0 else 1
         message = ICMPMessage(type=ICMP_ECHO_REQUEST, code=code,
                               dest_ip=self.dest[0], dest_port=self.dest[1], data=sdata)
         self.icmp_socket.sendto(message, (self.proxy, 1))

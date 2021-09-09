@@ -137,9 +137,6 @@ class ICMPSocket(socket.socket):
     def recvfrom(self, size: int, flags: int = ...) -> Tuple[bytes, Any]:
         data, address = super().recvfrom(size)
         message = ICMPMessage().parse(data)
-        print(message.barker, self._barker)
-        #if message.barker != self._barker:
-            #return None, address# Not our message
 
         return message, address
 
