@@ -54,6 +54,7 @@ class ProxyServer(Proxy):
             if _socket == sock:
                 sock_barker = _barker
 
+        # if no data the socket may be closed/timeout/EOF
         code = 0 if len(sdata) > 0 else 1
         message = ICMPMessage(type=ICMP_ECHO_REPLY, code=code, dest_ip=self.dest[0], dest_port=self.dest[1], data=sdata, barker=sock_barker)
         self.icmp_socket.sendto(message, (self.source, 0))

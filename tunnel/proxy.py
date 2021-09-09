@@ -4,9 +4,8 @@ import socket
 import select
 
 
-# TODO change
-ICMP_BUFFER_SIZE = 1500
-TCP_BUFFER_SIZE = 1500
+ICMP_BUFFER_SIZE = 3000
+TCP_BUFFER_SIZE = 3000
 
 
 class Proxy:

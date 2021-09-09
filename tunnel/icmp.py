@@ -127,14 +127,14 @@ class ICMPSocket(socket.socket):
         """Initialize the ICMP socket and set to only receive icmp messages which starts with barker."""
 
         self.sock = super().__init__(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-        # So that each ICMPSocket instance will have a different BARKER
+        # So that each ICMPSocket instance will have a different BARKER as an identifier
         self._barker = BARKER + self.fileno()
 
     @property
     def barker(self):
         return self._barker
 
-    def recvfrom(self, size: int, flags: int = ...) -> Tuple[bytes, Any]:
+    def recvfrom(self, size: int, flags: int = ...) -> Tuple[ICMPMessage, Any]:
         data, address = super().recvfrom(size)
         message = ICMPMessage().parse(data)
 
