@@ -1,5 +1,6 @@
 """Proxy used on the server side which has allowed TCP."""
 
+from typing import Dict, List
 from proxy import Proxy, ICMP_BUFFER_SIZE, TCP_BUFFER_SIZE
 from icmp import ICMPSocket, ICMP_ECHO_REPLY, ICMPMessage, ICMP_ECHO_REQUEST
 
@@ -8,11 +9,11 @@ class ProxyServer(Proxy):
     """The proxy server which will handle TCP connections."""
 
     def __init__(self):
-        self.tcp_sockets = {}  # Barker: socket
-        self.icmp_socket = ICMPSocket()
-        self.sockets = [self.icmp_socket]
+        self.tcp_sockets: Dict[str, socket.socket] = {}  # Barker: socket
+        self.icmp_socket: ICMPSocket = ICMPSocket()
+        self.sockets: List[socket.socket] = [self.icmp_socket]
 
-    def icmp_data_handler(self, sock):
+    def icmp_data_handler(self, sock: socket.socket) -> None:
         """See base class."""
 
         message, _ = sock.recvfrom(ICMP_BUFFER_SIZE)
@@ -39,7 +40,7 @@ class ProxyServer(Proxy):
             # Unknown ICMP format
             print("Received bad ICMP packet")
 
-    def tcp_data_handler(self, sock):
+    def tcp_data_handler(self, sock: socket.socket) -> None:
         """See base class."""
 
         try:
@@ -65,7 +66,7 @@ class ProxyServer(Proxy):
         if code == 1:
             self.remove_tcp_socket(sock)
 
-    def remove_tcp_socket(self, sock):
+    def remove_tcp_socket(self, sock: socket.socket) -> None:
         self.sockets.remove(sock)
         for k, v in self.tcp_sockets.items():
             if v == sock:

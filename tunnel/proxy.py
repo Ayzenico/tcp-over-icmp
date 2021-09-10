@@ -10,23 +10,23 @@ TCP_BUFFER_SIZE = 3000
 
 class Proxy:
     @staticmethod
-    def create_tcp_socket(dest, server=False):
+    def create_tcp_socket(dest, server: bool = False) -> socket.socket:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind(dest) if server else sock.connect(dest)
         return sock
 
-    def icmp_data_handler(self, sock):
+    def icmp_data_handler(self, sock: socket.socket) -> None:
         """Handle ICMP packet."""
 
         raise NotImplementedError
 
-    def tcp_data_handler(self, sock):
+    def tcp_data_handler(self, sock: socket.socket) -> None:
         """Handle TCP packet."""
 
         raise NotImplementedError
 
-    def run(self):
+    def run(self) -> None:
         """Run the proxy server. Will not return."""
 
         try:
@@ -42,6 +42,6 @@ class Proxy:
         finally:
             self.close()
 
-    def close(self):
+    def close(self) -> None:
         for socket in self.sockets:
             socket.close()

@@ -2,7 +2,7 @@
 
 import threading
 import socket
-from typing import Tuple
+from typing import Tuple, List
 
 from proxy import Proxy, ICMP_BUFFER_SIZE, TCP_BUFFER_SIZE
 from icmp import ICMPSocket, ICMP_ECHO_REPLY, ICMPMessage, ICMP_ECHO_REQUEST
@@ -17,9 +17,9 @@ class ProxyClient(Proxy, threading.Thread):
         self.dest: Tuple[str, int] = dest
         self.tcp_socket: socket.socket = sock
         self.icmp_socket: ICMPSocket = ICMPSocket()
-        self.sockets = [self.tcp_socket, self.icmp_socket]
+        self.sockets: List[socket.socket] = [self.tcp_socket, self.icmp_socket]
 
-    def icmp_data_handler(self, sock):
+    def icmp_data_handler(self, sock: socket.socket) -> None:
         """See base class."""
 
         message, _ = sock.recvfrom(ICMP_BUFFER_SIZE)
@@ -32,7 +32,7 @@ class ProxyClient(Proxy, threading.Thread):
             elif message.type == ICMP_ECHO_REPLY:
                 self.tcp_socket.send(message.data)
 
-    def tcp_data_handler(self, sock):
+    def tcp_data_handler(self, sock: socket.socket) -> None:
         """See base class."""
 
         sdata = sock.recv(TCP_BUFFER_SIZE)
@@ -56,7 +56,7 @@ class ProxyClientManager(ProxyClient):
         self._tcp_server_socket = self.create_tcp_socket(
             self._local_address, server=True)
 
-    def run(self):
+    def run(self) -> None:
         while True:
             self._tcp_server_socket.listen(5)
             sock, _ = self._tcp_server_socket.accept()

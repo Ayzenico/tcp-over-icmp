@@ -34,7 +34,7 @@ class IPHeader:
     src_ip: str = ''
     dst_ip: str = ''
 
-    def parse(self, packet: bytes):
+    def parse(self, packet: bytes) -> IPHeader:
         (self.version, self.type, self.len,
          self.host_id, self.flags, self.ttl,
          self.protocol, self.checksum, self.src_ip,
@@ -72,7 +72,7 @@ class ICMPMessage:
         self.dest_port = int(dest_port)
         self.data = data
 
-    def parse(self, packet: bytes):
+    def parse(self, packet: bytes) -> ICMPMessage:
         self.ip_header = IPHeader().parse(packet)
 
         (self.type, self.code, self.checksum,
@@ -84,7 +84,7 @@ class ICMPMessage:
         self.dest_ip = socket.inet_ntoa(self.dest_ip)
         return self
 
-    def make_message(self, make_ip=False) -> bytes:
+    def make_message(self, make_ip: int = False) -> bytes:
         ip_header = b''
         if make_ip:
             ip_header = self.ip_header.make_header()
@@ -95,7 +95,7 @@ class ICMPMessage:
                                   self.barker, socket.inet_aton(self.dest_ip), self.dest_port)
         return ip_header + icmp_header + self.data
 
-    def calculate_checksum(self):
+    def calculate_checksum(self) -> None:
         """
         Calculate and fill the checksum field of ICMP.
         Calculations taken from https://gist.github.com/pklaus/856268 with a few changes.
@@ -131,12 +131,12 @@ class ICMPSocket(socket.socket):
     def __init__(self):
         """Initialize the ICMP socket and set to only receive icmp messages which starts with barker."""
 
-        self.sock = super().__init__(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
+        self.sock: socket.socket = super().__init__(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
         # So that each ICMPSocket instance will have a different BARKER as an identifier
-        self._barker = BARKER + self.fileno()
+        self._barker: int = BARKER + self.fileno()
 
     @property
-    def barker(self):
+    def barker(self) -> int:
         return self._barker
 
     def recvfrom(self, size: int, flags: int = ...) -> Tuple[ICMPMessage, Any]:
