@@ -8,7 +8,7 @@ def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Python TCP over ICMP tunnel.",
-        usage="""Needs to be runned as root (use of raw sockets), currently support only IP addresses.
+        usage="""Needs to be run as root (use of raw sockets), currently supports only IP addresses.
                 Client side: python3 main.py -p <proxy_host> -lh <local_host> -lp <local_port> -dh <dest_host> -dp <dest_port>
                 Server side: python3 main.py -s""",
     )
